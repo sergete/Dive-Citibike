@@ -1,0 +1,99 @@
+services:
+  mongodb:
+    restart: unless-stopped
+    image: mongo:8.0.5-rc2@sha256:a58f160bc96d26b48a88142019cf3d4f8eb733d9c6e8cd8558c0d18a23ba9ccb
+    container_name: mongodb
+    hostname: mongodb
+    volumes:
+      - mongodb-data:/data/db/
+      - mongodb-log:/var/log/mongodb/
+    env_file:
+      - .env
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_INITDB_ROOT_USERNAME}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_INITDB_ROOT_PASSWORD}
+    ports:
+      - "27017:27017"
+    networks:
+      - mongodb_network
+
+  mongo-express:
+    image: mongo-express:latest
+    container_name: mongo-express
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      ME_CONFIG_MONGODB_ADMINUSERNAME: ${MONGO_INITDB_ROOT_USERNAME}
+      ME_CONFIG_MONGODB_ADMINPASSWORD: ${MONGO_INITDB_ROOT_PASSWORD}
+      ME_CONFIG_MONGODB_PORT: 27017
+      ME_CONFIG_MONGODB_SERVER: 'mongodb'
+      ME_CONFIG_BASICAUTH_USERNAME: ${MONGO_EXPRESS_USERNAME}
+      ME_CONFIG_BASICAUTH_PASSWORD: ${MONGO_EXPRESS_PASSWORD}
+    ports:
+      - 8081:8081
+    networks:
+      - mongodb_network
+    depends_on:
+      - mongodb
+  
+  tasks:
+    restart: unless-stopped
+    build:
+      context: ./backend/tasks
+      dockerfile: Dockerfile
+    env_file:
+      - .env
+    container_name: tasks
+    working_dir: /app
+    volumes:
+      - ./backend/tasks:/app
+    command: tail -f /dev/null # Mantiene el contenedor activo
+    depends_on:
+      - mongodb
+    networks:
+      - mongodb_network
+
+  backend:
+    restart: unless-stopped
+    build:
+      context: ./backend/app
+      dockerfile: Dockerfile
+    env_file:
+      - .env
+    container_name: backend
+    volumes:
+      - ./backend/app:/app
+    ports:
+      - "80:80"
+    depends_on:
+      - mongodb
+    networks:
+      - mongodb_network
+#
+#  ofelia:
+#    restart: unless-stopped
+#    image: mcuadros/ofelia:latest
+#    container_name: ofelia
+#    depends_on:
+#      - tasks
+#    volumes:
+#      - /var/run/docker.sock:/var/run/docker.sock
+#    command: daemon --docker
+#    environment:
+#      - OFELIA_JOB_tasks.schedule=0 23 * * * # Todos los días a las 23:00
+#      - OFELIA_JOB_tasks.container=tasks
+#      - OFELIA_JOB_tasks.command=python scraper.py
+
+volumes:
+  mongodb-data:
+    driver: local
+    name: mongo-data
+  mongodb-log:
+    driver: local
+    name: mongo-log
+
+networks:
+  mongodb_network:
+    driver: bridge
+    name: mongo-network
