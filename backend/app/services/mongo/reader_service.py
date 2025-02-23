@@ -12,7 +12,7 @@ class MongoReaderService:
              filter_query=dict[str, Any],
              projection: dict | None = None) -> list[dict[str, Any]]:
         if projection is None:
-            projection = {'_id': False}
+            projection = {}
 
         return list(self.mongo_client.collection.find(
             filter=filter_query,

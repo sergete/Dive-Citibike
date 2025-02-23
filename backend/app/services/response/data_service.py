@@ -1,3 +1,4 @@
+from services.formatter import DataFormatterService
 from services.mongo import MongoReaderService
 
 
@@ -7,4 +8,6 @@ class DataService:
 
     async def get_data(self):
         query = {"data_id": {"$regex": f"^{self.year_and_month}"}}
-        return await MongoReaderService().find(query)
+        results = await MongoReaderService().find(query, projection={"_id": False,
+                                                               "data": True})
+        return DataFormatterService.format(results)
