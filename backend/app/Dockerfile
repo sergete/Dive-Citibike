@@ -22,10 +22,7 @@ COPY . .
 RUN uv pip compile pyproject.toml -o requirements.txt
 RUN pip install -r requirements.txt
 
-# Exponer el puerto 80
-EXPOSE 80
-
 ENV PYTHONUNBUFFERED=1
 
 # Comando para ejecutar la aplicación con Uvicorn
-ENTRYPOINT ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "80"]
+ENTRYPOINT ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8081"]

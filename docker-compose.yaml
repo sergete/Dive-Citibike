@@ -31,7 +31,7 @@ services:
       ME_CONFIG_BASICAUTH_USERNAME: ${MONGO_EXPRESS_USERNAME}
       ME_CONFIG_BASICAUTH_PASSWORD: ${MONGO_EXPRESS_PASSWORD}
     ports:
-      - 8081:8081
+      - 9000:9000
     networks:
       - mongodb_network
     depends_on:
@@ -48,7 +48,6 @@ services:
     working_dir: /app
     volumes:
       - ./backend/tasks:/app
-    command: tail -f /dev/null # Mantiene el contenedor activo
     depends_on:
       - mongodb
     networks:
@@ -65,9 +64,25 @@ services:
     volumes:
       - ./backend/app:/app
     ports:
-      - "80:80"
+      - "8081:8081"
     depends_on:
       - mongodb
+    networks:
+      - mongodb_network
+      
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: frontend
+    restart: unless-stopped
+    ports:
+      - 3000:3000
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    environment:
+      VITE_APP_BACKEND_ADDRESS: "http://backend:8081/v1/trips/bikes"
     networks:
       - mongodb_network
 #
@@ -97,3 +112,4 @@ networks:
   mongodb_network:
     driver: bridge
     name: mongo-network
+  frontend_network:
