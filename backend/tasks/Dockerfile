@@ -26,4 +26,4 @@ ENV CHROME_BIN=/usr/bin/chromium
 ENV CHROMEDRIVER_BIN=/usr/bin/chromium-driver
 
 # Comando para mantener el contenedor activo
-ENTRYPOINT ["python", "scraper.py", "&&", "tail", "-f", "/dev/null"]
+CMD ["tail", "-f", "/dev/null"]
