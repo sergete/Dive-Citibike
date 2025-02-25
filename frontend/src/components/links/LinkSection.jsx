@@ -30,7 +30,7 @@ export function LinkSection ()
 
 	const fetchLinks = () => {
 		const path = `${year}${month == null ? "": "?month=" + encodeURIComponent(month)}`;
-		fetch(`${API_URLL}/data/${path}`)
+		fetch(`${API_URL}/data/${path}`)
 			.then((res) => res.json())
 			.then((data) => {
 				setLinks(data);

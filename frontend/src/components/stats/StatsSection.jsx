@@ -7,6 +7,8 @@ import {StatsTable} from "./StatsTable.jsx";
 
 export function StatsSection ()
 {
+	const API_URL = import.meta.env.VITE_BACKEND_URL
+
 	const [year, setYear] = useState(null);
 	const [month, setMonth] = useState(null);
 	const [ monthsItems, setMonthsItems ] = useState([]);
@@ -14,7 +16,7 @@ export function StatsSection ()
 	const [links, setLinks] = useState([]);
 
 	useEffect(() => {
-		fetch(`http://backend:8081/api/v1/trips/bikes/data/dates`)
+		fetch(`${API_URL}/data/dates`)
 			.then((res) => res.json())
 			.then((data) => {
 				setDates(data)
@@ -27,7 +29,7 @@ export function StatsSection ()
 	}, [])
 
 	const fetchStats = () => {
-		fetch(`http://backend:8081/api/v1/trips/bikes/data/stats/${year}/${month}`)
+		fetch(`${API_URL}/stats/${year}/${month}`)
 			.then((res) => res.json())
 			.then((data) => {
 				setLinks(data);
