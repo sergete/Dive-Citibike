@@ -1,8 +1,3 @@
-import os.path
-import shutil
-import zipfile
-
-import requests
 from pymongo.errors import ServerSelectionTimeoutError
 
 from services.mongo import MongoWriterService
@@ -15,13 +10,20 @@ from services.stats import StatsService
 def format_data(data: dict[str, list]) -> list[dict]:
     return FormatterService.format(data)
 
-def save_data(docs: list[dict]) -> None:
+# def save_data(docs: list[dict]) -> None:
+#     mongo_service = MongoWriterService()
+#     for doc in docs:
+#         try:
+#             mongo_service.insert_doc(filter_query={"data_id": doc["data_id"]}, doc=doc)
+#         except ServerSelectionTimeoutError as ex:
+#             print("Mongo server timed out for", doc["data_id"])
+
+def save_data(doc: dict) -> None:
     mongo_service = MongoWriterService()
-    for doc in docs:
-        try:
-            mongo_service.insert_doc(filter_query={"data_id": doc["data_id"]}, doc=doc)
-        except ServerSelectionTimeoutError as ex:
-            print("Mongo server timed out for", doc["data_id"])
+    try:
+        mongo_service.insert_doc(filter_query={"data_id": doc["data_id"]}, doc=doc)
+    except ServerSelectionTimeoutError as ex:
+        print("Mongo server timed out for", doc["data_id"])
 
 
 def main():
@@ -31,9 +33,9 @@ def main():
         if scraped_links:
             formatted_data = format_data(scraped_links)
             stats_service = StatsService(download_dir="./downloads")
-            formatted_stats_data = stats_service.run_stats(formatted_data)
-
-            save_data(formatted_stats_data)
+            for data in formatted_data:
+                formatted_stats_data = stats_service.run_stats(data)
+                save_data(formatted_stats_data)
 
         print("Process Complete")
 

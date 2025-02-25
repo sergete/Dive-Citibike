@@ -7,6 +7,7 @@ import {LinkTable} from "./LinkTable.jsx";
 
 export function LinkSection ()
 {
+	const API_URL = import.meta.env.VITE_BACKEND_URL
 
 	const [year, setYear] = useState(null);
 	const [month, setMonth] = useState(null);
@@ -15,7 +16,7 @@ export function LinkSection ()
 	const [links, setLinks] = useState([]);
 
 	useEffect(() => {
-		fetch(`http://backend:8081/v1/trips/bikes/dates`)
+		fetch(`${API_URL}/dates`)
 			.then((res) => res.json())
 			.then((data) => {
 				setDates(data)
@@ -29,7 +30,7 @@ export function LinkSection ()
 
 	const fetchLinks = () => {
 		const path = `${year}${month == null ? "": "?month=" + encodeURIComponent(month)}`;
-		fetch(`http://backend:8081/v1/trips/bikes/data/${path}`)
+		fetch(`${API_URLL}/data/${path}`)
 			.then((res) => res.json())
 			.then((data) => {
 				setLinks(data);

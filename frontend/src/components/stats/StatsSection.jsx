@@ -14,7 +14,7 @@ export function StatsSection ()
 	const [links, setLinks] = useState([]);
 
 	useEffect(() => {
-		fetch(`http://backend:8081/v1/trips/bikes/data/dates`)
+		fetch(`http://backend:8081/api/v1/trips/bikes/data/dates`)
 			.then((res) => res.json())
 			.then((data) => {
 				setDates(data)
@@ -27,7 +27,7 @@ export function StatsSection ()
 	}, [])
 
 	const fetchStats = () => {
-		fetch(`http://backend:8081/v1/trips/bikes/data/stats/${year}/${month}`)
+		fetch(`http://backend:8081/api/v1/trips/bikes/data/stats/${year}/${month}`)
 			.then((res) => res.json())
 			.then((data) => {
 				setLinks(data);

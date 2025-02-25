@@ -9,18 +9,20 @@ import polars as pl
 class StatsService:
     def __init__(self, download_dir):
         self.download_dir = download_dir
+        # create directory
+        self._create_dir(self.download_dir)
 
     def _download_url(self,
                       url: str,
-                      save_path: str,
+                      filepath: str,
                       chunk_size:int=128) -> None:
-        filename = os.path.basename(url)
+        
         r = requests.get(url, stream=True)
-        with open(f"{save_path}/{filename}", 'wb') as fd:
+        with open(filepath, 'wb') as fd:
             for index, chunk in enumerate(r.iter_content(chunk_size=chunk_size)):
                 print(f"Chunk {index} / downloading {url}")
                 fd.write(chunk)
-
+        
 
     def _unzip_file(self, item: str,
                     download_base_path: str,
@@ -31,6 +33,16 @@ class StatsService:
         # create zipfile object
         zip_ref.extractall(extraction_path)  # extract file to dir
         zip_ref.close()  # close file
+
+    def _create_dir_from_zip(self, zip_path: str) -> str:
+        dir_path = f"{self.download_dir}/{os.path.basename(zip_path).split(".")[0]}"
+        os.makedirs(dir_path, exist_ok=True)
+        return dir_path
+
+    def _create_dir(self, dir_path: str) -> None:
+        if os.path.exists(dir_path):
+            shutil.rmtree(dir_path)
+        os.makedirs(dir_path)
 
     def _calculate_station_stats(self, df: pl.DataFrame, column_station_id_name: str) -> list[dict] | None:
         # calculate stats
@@ -58,10 +70,14 @@ class StatsService:
     def _calculate_days_stats(self, df: pl.DataFrame) -> list[dict] | None:
         # calculate stats
         try:
+            dt_col_name = "dt_started_at"
+            df_with_datetime = df.with_columns(
+                pl.col("started_at").str.to_datetime().alias(dt_col_name)
+            )
             days_stats_df = (
-                df.with_columns(
-                    pl.col("dt_started_at").dt.weekday().alias("weekday"),
-                    pl.col("dt_started_at").dt.strftime("%A").alias("day")
+                df_with_datetime.with_columns(
+                    pl.col(dt_col_name).dt.weekday().alias("weekday"),
+                    pl.col(dt_col_name).dt.strftime("%A").alias("day")
                 )
                 .group_by("weekday", "day")
                 .len()
@@ -73,39 +89,80 @@ class StatsService:
             return None
 
 
-    def run_stats(self, data: list[dict]) -> list[dict] | None:
-        formatted_stats_data = []
-        for index, data in enumerate(data):
-            formatted_stats_data.append({**data})
+    # def run_stats(self, data: list[dict]) -> list[dict] | None:
+    #     formatted_stats_data = []
+    #     for index, data in enumerate(data):
+    #         formatted_stats_data.append({**data})
 
-            # recreate dir
-            os.makedirs(self.download_dir, exist_ok=True)
+    #         # recreate dir
+    #         os.makedirs(self.download_dir, exist_ok=True)
 
-            data_id = data["data_id"]
-            # if date has year and month calculate
-            if len(data_id) == 6:
-                final_stats = {}
-                for doc in data.get("data", []):
-                    self._download_url(doc, self.download_dir, chunk_size=1024)
-                    zip_files = [file for file in os.listdir(self.download_dir) if file.endswith(".zip")]
-                    for item in zip_files:  # loop through items in dir
-                        extraction_path = f"{self.download_dir}/{os.path.basename(item).split(".")[0]}"
-                        self._unzip_file(item, self.download_dir, extraction_path)
-                        files = [x for x in os.listdir(extraction_path) if x.endswith(".csv")]
-                        dfs = [pl.read_csv(os.path.join(extraction_path, file), infer_schema_length=0) for file in
-                               files]
-                        if dfs:
-                            df = pl.concat(dfs, parallel=True)
-                            print(f"Calculate stats for file {doc}")
-                            final_stats[doc] = {
-                                "stations": self._calculate_station_stats(df, column_station_id_name="start_station_id"),
-                                "days": self._calculate_days_stats(df)
-                            }
-                            print(final_stats)
-                # add stats
-                formatted_stats_data[index]["stats"] = final_stats
+    #         data_id = data["data_id"]
+    #         # if date has year and month calculate
+    #         if len(data_id) == 6:
+    #             final_stats = {}
+    #             for doc in data.get("data", []):
+    #                 self._download_url(doc, self.download_dir, chunk_size=1024)
+    #                 zip_files = [file for file in os.listdir(self.download_dir) if file.endswith(".zip")]
+    #                 for item in zip_files:  # loop through items in dir
+    #                     extraction_path = f"{self.download_dir}/{os.path.basename(item).split(".")[0]}"
+    #                     self._unzip_file(item, self.download_dir, extraction_path)
+    #                     files = [x for x in os.listdir(extraction_path) if x.endswith(".csv")]
+    #                     dfs = [pl.read_csv(os.path.join(extraction_path, file), infer_schema_length=0) for file in
+    #                            files]
+    #                     if dfs:
+    #                         df = pl.concat(dfs, parallel=True)
+    #                         print(f"Calculate stats for file {doc}")
+    #                         final_stats[doc] = {
+    #                             "stations": self._calculate_station_stats(df, column_station_id_name="start_station_id"),
+    #                             "days": self._calculate_days_stats(df)
+    #                         }
+    #                         print(final_stats)
+    #             # add stats
+    #             formatted_stats_data[index]["stats"] = final_stats
+    #             # delete all files
+    #             shutil.rmtree(self.download_dir)
+
+    #     return formatted_stats_data
+    
+    def run_stats(self, data: dict) -> dict | None:
+        data_id = data["data_id"]
+        # if date has year and month calculate
+        if len(data_id) == 6:
+            final_stats = {}
+            docs = data.get("data", [])
+
+            # recreate docs dir
+            directories = list(map(self._create_dir_from_zip, docs))
+            for index, doc in enumerate(docs):
+                filepath  = directories[index]
+                # download url
+                self._download_url(url=doc,
+                                   filepath=f"{filepath}/{os.path.basename(doc)}",
+                                   chunk_size=2048)
+
+                # list zip files
+                zip_files = [file for file in os.listdir(filepath) if file.endswith(".zip")]
+
+                # loop through items in dir
+                for item in zip_files:
+                    self._unzip_file(item, filepath, filepath)
+                    files = [x for x in os.listdir(filepath) if x.endswith(".csv")]
+                    dfs = [pl.read_csv(os.path.join(filepath, file), infer_schema_length=0) for file in
+                            files]
+                    if dfs:
+                        df = pl.concat(dfs, parallel=True)
+                        print(f"Calculate stats for file {doc}")
+                        final_stats[doc] = {
+                            "stations": self._calculate_station_stats(df, column_station_id_name="start_station_id"),
+                            "days": self._calculate_days_stats(df)
+                        }
+                        print(final_stats)
+                
                 # delete all files
-                shutil.rmtree(self.download_dir)
+                shutil.rmtree(filepath)
+            # add stats
+            data["stats"] = final_stats
 
-        return formatted_stats_data
+        return data
 

@@ -12,7 +12,7 @@ RUN npm install
 COPY . .
  
 # expose the app on port 3000
-EXPOSE 3000
+# EXPOSE 80
 
 # Start your frontend application
 CMD ["npm", "run","dev"]
