@@ -3,6 +3,7 @@ import { Route, Routes } from "react-router-dom";
 import Sidebar from "./components/common/Sidebar";
 
 import LinksPage from "./pages/LinksPage.jsx";
+import StatsPage from "./pages/StatsPage.jsx";
 
 function App() {
 	return (
@@ -17,7 +18,7 @@ function App() {
 			<Routes>
 				<Route path='/' element={<LinksPage />} />
 				<Route path='/links' element={<LinksPage />} />
-				{/*<Route path='/stats' element={<ProductsPage />} />*/}
+				<Route path='/stats' element={<StatsPage />} />
 			</Routes>
 		</div>
 	);

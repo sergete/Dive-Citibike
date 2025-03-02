@@ -39,21 +39,21 @@ services:
     depends_on:
       - mongodb
   
-  # tasks:
-  #   restart: unless-stopped
-  #   build:
-  #     context: ./backend/tasks
-  #     dockerfile: Dockerfile
-  #   env_file:
-  #     - .env
-  #   container_name: tasks
-  #   working_dir: /app
-  #   volumes:
-  #     - ./backend/tasks:/app
-  #   depends_on:
-  #     - mongodb
-  #   networks:
-  #     - mongodb_network
+  tasks:
+    restart: unless-stopped
+    build:
+      context: ./backend/tasks
+      dockerfile: Dockerfile
+    env_file:
+      - .env
+    container_name: tasks
+    working_dir: /app
+    volumes:
+      - ./backend/tasks:/app
+    depends_on:
+      - mongodb
+    networks:
+      - mongodb_network
 
   backend:
     restart: unless-stopped
