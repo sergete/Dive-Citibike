@@ -3,7 +3,7 @@
 import {BarChart2} from "lucide-react";
 import SettingSection from "../settings/SettingSection.jsx";
 import {useEffect, useState} from "react";
-import {StatsTable} from "./StatsTable.jsx";
+import {Card} from "./StatsCard.jsx";
 
 export function StatsSection ()
 {
@@ -13,10 +13,10 @@ export function StatsSection ()
 	const [month, setMonth] = useState(null);
 	const [ monthsItems, setMonthsItems ] = useState([]);
 	const [dates, setDates] = useState({})
-	const [links, setLinks] = useState([]);
+	const [stats, setStats] = useState([]);
 
 	useEffect(() => {
-		fetch(`${API_URL}/data/dates`)
+		fetch(`${API_URL}/dates`)
 			.then((res) => res.json())
 			.then((data) => {
 				setDates(data)
@@ -32,11 +32,13 @@ export function StatsSection ()
 		fetch(`${API_URL}/stats/${year}/${month}`)
 			.then((res) => res.json())
 			.then((data) => {
-				setLinks(data);
+				console.log("response data")
+				console.log(data)
+				setStats(data);
 			})
 			.catch((err) => {
 				console.error(err);
-				setLinks([])
+				setStats([])
 			})
 	}
 
@@ -52,7 +54,7 @@ export function StatsSection ()
 
 	return (
 		<div>
-			<SettingSection icon={BarChart2} title={"Statistics"}>
+			<SettingSection icon={BarChart2} title={"Stats"}>
 				<div className='flex-1 overflow-auto relative z-10'>
 					<div className="grid grid-cols-2 gap-4">
 						<div className="col-span-2">
@@ -113,7 +115,11 @@ export function StatsSection ()
 					Listar Estadísticas
 				</button>
 			</SettingSection>
-			<StatsTable statsData={links}></StatsTable>
+			<div className="min-h-screen flex items-center justify-center bg-gray-50">
+				{stats.map((stat, i) => (
+					<Card key={i} data={stat} />
+				))}	
+			</div>
 		</div>
 )
 }

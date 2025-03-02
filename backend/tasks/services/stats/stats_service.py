@@ -65,7 +65,7 @@ class StatsService:
                                          on=column_station_id_name)
                     ).to_dicts()
         except:
-            return None
+            return []
 
     def _calculate_days_stats(self, df: pl.DataFrame) -> list[dict] | None:
         # calculate stats
@@ -86,7 +86,7 @@ class StatsService:
             )
             return days_stats_df.to_dicts()
         except:
-            return None
+            return []
 
 
     # def run_stats(self, data: list[dict]) -> list[dict] | None:
