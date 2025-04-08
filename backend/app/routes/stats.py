@@ -16,3 +16,11 @@ async def get_stats(year: str, month: str) -> JSONResponse:
 
     return JSONResponse(results)
 
+
+@router.get("/dates")
+async def info_dates() -> JSONResponse:
+    service = DateService()
+    results = await service.get_stats_dates()
+
+    return JSONResponse(results)
+

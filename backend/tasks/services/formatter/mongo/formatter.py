@@ -5,7 +5,7 @@ class FormatterService:
         for key, value in data.items():
             mongo_format = {
                 "data_id": key,
-                "data": value
+                "link": value
             }
             formatted_data.append(mongo_format)
         return formatted_data

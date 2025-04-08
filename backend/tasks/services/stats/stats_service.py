@@ -16,8 +16,9 @@ class StatsService:
                       url: str,
                       filepath: str,
                       chunk_size:int=128) -> None:
-        
+
         r = requests.get(url, stream=True)
+        r.raise_for_status() # Raise an exception for HTTP errors
         with open(filepath, 'wb') as fd:
             for index, chunk in enumerate(r.iter_content(chunk_size=chunk_size)):
                 print(f"Chunk {index} / downloading {url}")
@@ -87,77 +88,48 @@ class StatsService:
             return days_stats_df.to_dicts()
         except:
             return []
-
-
-    # def run_stats(self, data: list[dict]) -> list[dict] | None:
-    #     formatted_stats_data = []
-    #     for index, data in enumerate(data):
-    #         formatted_stats_data.append({**data})
-
-    #         # recreate dir
-    #         os.makedirs(self.download_dir, exist_ok=True)
-
-    #         data_id = data["data_id"]
-    #         # if date has year and month calculate
-    #         if len(data_id) == 6:
-    #             final_stats = {}
-    #             for doc in data.get("data", []):
-    #                 self._download_url(doc, self.download_dir, chunk_size=1024)
-    #                 zip_files = [file for file in os.listdir(self.download_dir) if file.endswith(".zip")]
-    #                 for item in zip_files:  # loop through items in dir
-    #                     extraction_path = f"{self.download_dir}/{os.path.basename(item).split(".")[0]}"
-    #                     self._unzip_file(item, self.download_dir, extraction_path)
-    #                     files = [x for x in os.listdir(extraction_path) if x.endswith(".csv")]
-    #                     dfs = [pl.read_csv(os.path.join(extraction_path, file), infer_schema_length=0) for file in
-    #                            files]
-    #                     if dfs:
-    #                         df = pl.concat(dfs, parallel=True)
-    #                         print(f"Calculate stats for file {doc}")
-    #                         final_stats[doc] = {
-    #                             "stations": self._calculate_station_stats(df, column_station_id_name="start_station_id"),
-    #                             "days": self._calculate_days_stats(df)
-    #                         }
-    #                         print(final_stats)
-    #             # add stats
-    #             formatted_stats_data[index]["stats"] = final_stats
-    #             # delete all files
-    #             shutil.rmtree(self.download_dir)
-
-    #     return formatted_stats_data
     
     def run_stats(self, data: dict) -> dict | None:
         data_id = data["data_id"]
         # if date has year and month calculate
         if len(data_id) == 6:
             final_stats = {}
-            docs = data.get("data", [])
+            docs = data.get("link", [])
 
             # recreate docs dir
             directories = list(map(self._create_dir_from_zip, docs))
             for index, doc in enumerate(docs):
                 filepath  = directories[index]
                 # download url
-                self._download_url(url=doc,
-                                   filepath=f"{filepath}/{os.path.basename(doc)}",
-                                   chunk_size=2048)
+                try:
+                    self._download_url(url=doc,
+                                       filepath=f"{filepath}/{os.path.basename(doc)}",
+                                       chunk_size=4096)
 
-                # list zip files
-                zip_files = [file for file in os.listdir(filepath) if file.endswith(".zip")]
+                    # list zip files
+                    zip_files = [file for file in os.listdir(filepath) if file.endswith(".zip")]
 
-                # loop through items in dir
-                for item in zip_files:
-                    self._unzip_file(item, filepath, filepath)
-                    files = [x for x in os.listdir(filepath) if x.endswith(".csv")]
-                    dfs = [pl.read_csv(os.path.join(filepath, file), infer_schema_length=0) for file in
-                            files]
-                    if dfs:
-                        df = pl.concat(dfs, parallel=True)
-                        print(f"Calculate stats for file {doc}")
-                        final_stats[doc] = {
-                            "stations": self._calculate_station_stats(df, column_station_id_name="start_station_id"),
-                            "days": self._calculate_days_stats(df)
-                        }
-                        print(final_stats)
+                    # loop through items in dir
+                    for item in zip_files:
+                        self._unzip_file(item, filepath, filepath)
+                        files = [x for x in os.listdir(filepath) if x.endswith(".csv")]
+                        dfs = [pl.read_csv(os.path.join(filepath, file), infer_schema_length=0) for file in
+                                files]
+                        if dfs:
+                            df = pl.concat(dfs, parallel=True)
+                            print(f"Calculate stats for file {doc}")
+                            final_stats[doc] = {
+                                "stations": self._calculate_station_stats(df, column_station_id_name="start_station_id"),
+                                "days": self._calculate_days_stats(df)
+                            }
+                            print(final_stats)
+
+                except requests.exceptions.ConnectionError as e:
+                    print(f"Error connecting to the server: {e}")
+                except requests.exceptions.HTTPError as e:
+                    print(f"HTTP error occurred: {e}")
+                except requests.exceptions.RequestException as e:
+                    print(f"An error occurred: {e}")
                 
                 # delete all files
                 shutil.rmtree(filepath)

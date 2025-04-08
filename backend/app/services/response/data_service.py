@@ -9,5 +9,5 @@ class DataService:
     async def get_data(self):
         query = {"data_id": {"$regex": f"^{self.year_and_month}"}}
         results = await MongoReaderService().find(query, projection={"_id": False,
-                                                               "data": True})
+                                                               "link": True})
         return DataFormatterService.format(results)

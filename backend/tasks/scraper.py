@@ -9,7 +9,7 @@ from services.formatter.mongo import FormatterService
 
 from services.stats import StatsService
 
-NUM_THREADS = os.getenv('NUM_THREADS', 1)
+NUM_THREADS = os.getenv('NUM_THREADS', 2)
 
 def format_data(data: dict[str, list]) -> list[dict]:
     return FormatterService.format(data)
@@ -18,7 +18,7 @@ def format_data(data: dict[str, list]) -> list[dict]:
 def save_data(doc: dict) -> None:
     mongo_service = MongoWriterService()
     try:
-        mongo_service.insert_doc(filter_query={"data_id": doc["data_id"]}, doc=doc)
+        mongo_service.insert_doc(filter_query={"$and":[{"data_id": doc["data_id"]}, {"link": doc["link"]}]}, doc=doc)
     except ServerSelectionTimeoutError as ex:
         print("Mongo server timed out for", doc["data_id"])
 
