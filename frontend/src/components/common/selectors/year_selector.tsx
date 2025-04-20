@@ -1,0 +1,36 @@
+"use client";
+
+import {
+    Select,
+    SelectContent,
+    SelectGroup,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/components/ui/select.tsx"
+import {Label} from "@radix-ui/react-label";
+
+export function YearSelector({ handle, label, items}:{handle: any, label: string, items: {[key: string]: string[]}}) {
+    const handleChange = (item: string): void => {
+        console.log("handleChange", item);
+        handle(item);
+    }
+
+    return (
+        <div id='selector' className="flex flex-col justify-center items-center mb-6">
+            <Label className="font-bold" htmlFor="selector">{ label }</Label>
+            <Select onValueChange={handleChange}>
+                <SelectTrigger className="w-[180px]">
+                    <SelectValue/>
+                </SelectTrigger>
+                <SelectContent>
+                    <SelectGroup>
+                        {Object.keys(items).sort().map((item, i) => (
+                            <SelectItem key={i} value={item}>{item}</SelectItem>
+                        ))}
+                    </SelectGroup>
+                </SelectContent>
+            </Select>
+        </div>
+    )
+}
