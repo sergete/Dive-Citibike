@@ -86,7 +86,7 @@ services:
       - ./frontend:/app
       - /app/node_modules
     environment:
-      VITE_BACKEND_URL: http://127.0.0.1:8090/api/v1/trips/bikes
+      VITE_API_URL: http://backend:8090/api/v1/trips/bikes
     networks:
       - mongodb_network
 #
