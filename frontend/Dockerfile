@@ -6,10 +6,13 @@ WORKDIR /app
 COPY package*.json .
  
 # Install dependencies
-RUN npm install
+RUN npm install --legacy-peer-deps
  
 # Copy the rest of your application files
 COPY . .
+
+# Build the project
+RUN npm run build
  
 # expose the app on port 3000
 # EXPOSE 80
