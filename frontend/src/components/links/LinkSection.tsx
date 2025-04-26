@@ -19,7 +19,7 @@ import {useDates} from "@/hooks/use-dates.ts";
 
 export function LinkSection ()
 {
-	const API_URL = "http://127.0.0.1:8090/api/v1/trips/bikes"
+	const API_URL = `${import.meta.env.VITE_API_URL}`
 
 	const [links, setLinks] = useState([]);
 	const { status, data, error } = useDates()
