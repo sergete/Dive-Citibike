@@ -60,17 +60,20 @@ services:
     build:
       context: ./backend/app
       dockerfile: Dockerfile
+    container_name: backend
     env_file:
       - .env
-    container_name: backend
     volumes:
       - ./backend/app:/app
-    ports:
-      - "8090:8090"
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.backend.rule=Host(`localhost`) && PathPrefix(`/api`)"
+      - "traefik.http.services.backend.loadbalancer.server.port=8090"
     depends_on:
       - mongodb
     networks:
       - mongodb_network
+      - frontend_network
       
   frontend:
     build:
@@ -80,15 +83,74 @@ services:
     restart: unless-stopped
     depends_on:
       - backend
-    ports:
-      - 80:3000
     volumes:
       - ./frontend:/app
       - /app/node_modules
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.app-frontend.rule=Host(`localhost`)"
+      - "traefik.http.services.app-frontend.loadbalancer.server.port=3000" # Nginx default port
     environment:
-      VITE_API_URL: http://127.0.0.1:8090/api/v1/trips/bikes
+      VITE_API_URL: http://localhost/api/v1/trips/bikes
     networks:
-      - mongodb_network
+      - frontend_network
+  
+  traefik:
+    container_name: traefik
+    image: traefik:v3.3.5
+    command:
+      # Base config
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      - "--api.insecure=true"
+      - "--api.dashboard=true"
+      # Entrypoints
+      - "--entrypoints.web.address=:80"
+      # Logging
+      - "--log.level=DEBUG" # Optional: Set log level
+      - "--accesslog=true" # Enable access logs
+      # Let's Encrypt configuration
+      #- "--certificatesresolvers.myresolver.acme.email=hello@yourdomain.com"
+      #- "--certificatesresolvers.myresolver.acme.storage=/letsencrypt/acme.json"
+      #- "--certificatesresolvers.myresolver.acme.httpchallenge=true"
+      #- "--certificatesresolvers.myresolver.acme.httpchallenge.entrypoint=web" # Use HTTP challenge on port 80
+
+    ports:
+      - "80:80"   # HTTP
+      # - "443:443" # HTTPS
+      - "8080:8080" # Traefik Dashboard (optional, for direct access if API insecure is true)
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - letsencrypt:/letsencrypt # Mount the volume for certificates
+    networks:
+      - frontend_network
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 1024M
+    labels:
+      # Enable Traefik for itself (dashboard)
+      - "traefik.enable=true"
+      # --- HTTP to HTTPS Redirect ---
+      # 1. Define the middleware
+      - "traefik.http.middlewares.https-redirect.redirectscheme.scheme=https"
+      # 2. Create a router that captures all HTTP traffic
+      - "traefik.http.routers.http-catchall.rule=hostregexp(`{host:.+}`)"
+      - "traefik.http.routers.http-catchall.entrypoints=web"
+      - "traefik.http.routers.http-catchall.middlewares=https-redirect"
+      # --- Traefik Dashboard Router (HTTPS) ---
+      - "traefik.http.routers.dashboard.rule=Host(`traefik.yourdomain.com`)"
+      - "traefik.http.routers.dashboard.service=api@internal"
+      - "traefik.http.routers.dashboard.entrypoints=websecure" # Use HTTPS entrypoint
+      - "traefik.http.routers.dashboard.tls=true" # Enable TLS
+      - "traefik.http.routers.dashboard.tls.certresolver=myresolver" # Specify Let's Encrypt resolver
+      # --- Traefik Metrics Router (HTTPS) ---
+      - "traefik.http.routers.metrics.rule=Host(`traefik.yourdomain.com`) && Path(`/metrics`)"
+      - "traefik.http.routers.metrics.service=prometheus@internal" # Route to internal prometheus service
+      - "traefik.http.routers.metrics.entrypoints=websecure" # Use HTTPS entrypoint
+      - "traefik.http.routers.metrics.tls=true" # Enable TLS
+      - "traefik.http.routers.metrics.tls.certresolver=myresolver" # Specify Let's Encrypt resolver
 #
 #  ofelia:
 #    restart: unless-stopped
@@ -111,9 +173,11 @@ volumes:
   mongodb-log:
     driver: local
     name: mongo-log
+  letsencrypt: # Volume to store Let's Encrypt certificates
 
 networks:
   mongodb_network:
     driver: bridge
     name: mongo-network
   frontend_network:
+    driver: bridge
