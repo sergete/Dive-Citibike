@@ -129,28 +129,7 @@ services:
         limits:
           cpus: '1'
           memory: 1024M
-    labels:
-      # Enable Traefik for itself (dashboard)
-      - "traefik.enable=true"
-      # --- HTTP to HTTPS Redirect ---
-      # 1. Define the middleware
-      - "traefik.http.middlewares.https-redirect.redirectscheme.scheme=https"
-      # 2. Create a router that captures all HTTP traffic
-      - "traefik.http.routers.http-catchall.rule=hostregexp(`{host:.+}`)"
-      - "traefik.http.routers.http-catchall.entrypoints=web"
-      - "traefik.http.routers.http-catchall.middlewares=https-redirect"
-      # --- Traefik Dashboard Router (HTTPS) ---
-      - "traefik.http.routers.dashboard.rule=Host(`traefik.yourdomain.com`)"
-      - "traefik.http.routers.dashboard.service=api@internal"
-      - "traefik.http.routers.dashboard.entrypoints=websecure" # Use HTTPS entrypoint
-      - "traefik.http.routers.dashboard.tls=true" # Enable TLS
-      - "traefik.http.routers.dashboard.tls.certresolver=myresolver" # Specify Let's Encrypt resolver
-      # --- Traefik Metrics Router (HTTPS) ---
-      - "traefik.http.routers.metrics.rule=Host(`traefik.yourdomain.com`) && Path(`/metrics`)"
-      - "traefik.http.routers.metrics.service=prometheus@internal" # Route to internal prometheus service
-      - "traefik.http.routers.metrics.entrypoints=websecure" # Use HTTPS entrypoint
-      - "traefik.http.routers.metrics.tls=true" # Enable TLS
-      - "traefik.http.routers.metrics.tls.certresolver=myresolver" # Specify Let's Encrypt resolver
+
 #
 #  ofelia:
 #    restart: unless-stopped
