@@ -101,7 +101,7 @@ docker-compose down --rmi all --volumes
 ```
 
 ## API Endpoints
-BASE_PATH = "http://127.0.0.1:8081/api/v1/trips/bikes"
+BASE_PATH = "http://127.0.0.1/api/v1/trips/bikes"
 
 ### Get data endpoint
 #### Devuelve una lista con date_id y data
@@ -118,4 +118,4 @@ $BASE_PATH/stats/{year}/{month}
 $BASE_PATH/dates
 
 ## Frontend URL
-http://127.0.0.1:3000
+http://127.0.0.1
