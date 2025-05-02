@@ -15,19 +15,18 @@ import {
 } from "lucide-react"
 import {DateHandler} from "@/components/common/handler/DateHandler.tsx";
 import {useDates} from "@/hooks/use-dates.ts";
+import CONSTANTS from "@/lib/constants"
 
 
 export function LinkSection ()
 {
-	const API_URL = `${import.meta.env.VITE_API_URL}`
-
 	const [links, setLinks] = useState([]);
 	const { status, data, error } = useDates()
 
 	const fetchLinks = (year: string, month?: string) => {
 		const path = `${year}${month == undefined ? "": "?month=" + encodeURIComponent(month)}`;
 		console.log("FetchLinks");
-		fetch(`${API_URL}/data/${path}`)
+		fetch(`${CONSTANTS.API_URL}/data/${path}`)
 			.then((res) => res.json())
 			.then((data) => {
 				setLinks(data);

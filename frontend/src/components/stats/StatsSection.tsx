@@ -5,12 +5,11 @@ import {StatsCarousel} from "@/components/stats/Carousel.tsx";
 import {IStats} from "@/components/common/interfaces/StatsInterface.ts";
 import {useStatsDates} from "@/hooks/use-dates.ts";
 import {DateHandler} from "@/components/common/handler/DateHandler.tsx";
+import CONSTANTS from "@/lib/constants"
 
 
 export function StatsSection ()
 {
-	const API_URL = `${import.meta.env.VITE_API_URL}`
-
 	const [stats, setStats] = useState<IStats>({
 		data: []
 	});
@@ -18,7 +17,7 @@ export function StatsSection ()
 
 
 	const fetchStats = (year: string, month: string) => {
-		fetch(`${API_URL}/${year}/${month}`)
+		fetch(`${CONSTANTS.API_URL}/${year}/${month}`)
 			.then((res) => res.json())
 			.then((data) => {
 				console.log("response data")
