@@ -25,7 +25,6 @@ export function LinkSection ()
 
 	const fetchLinks = (year: string, month?: string) => {
 		const path = `${year}${month == undefined ? "": "?month=" + encodeURIComponent(month)}`;
-		console.log("FetchLinks");
 		fetch(`${CONSTANTS.API_URL}/data/${path}`)
 			.then((res) => res.json())
 			.then((data) => {
@@ -35,14 +34,10 @@ export function LinkSection ()
 				console.error(err);
 				setLinks([])
 			})
-		console.log("Retrieved links")
-		console.log(links)
 	}
 
 	const onDownload = (item: string) => {
-		console.log(item);
 		window.open(item, "_blank")
-		console.log("finished")
 	}
 
 	return (

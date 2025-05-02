@@ -20,8 +20,6 @@ export function StatsSection ()
 		fetch(`${CONSTANTS.API_URL}/${year}/${month}`)
 			.then((res) => res.json())
 			.then((data) => {
-				console.log("response data")
-				console.log(data)
 				setStats({data: data});
 			})
 			.catch((err) => {

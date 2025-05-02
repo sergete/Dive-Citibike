@@ -12,7 +12,6 @@ import {Label} from "@radix-ui/react-label";
 
 export function YearSelector({ handle, label, items}:{handle: any, label: string, items: {[key: string]: string[]}}) {
     const handleChange = (item: string): void => {
-        console.log("handleChange", item);
         handle(item);
     }
 

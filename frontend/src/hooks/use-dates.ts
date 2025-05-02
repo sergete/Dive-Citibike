@@ -6,7 +6,6 @@ export function useDates(): UseQueryResult<{[key:string]: string[]}, Error> {
         queryKey: ['dates'],
         queryFn: async (): Promise<object> => {
             const url = `${CONSTANTS.API_URL}/dates`
-            console.log(url)
             const response = await fetch(url)
             if (!response.ok) {
                 throw new Error('Dates retrieval error')
@@ -21,7 +20,6 @@ export function useStatsDates(): UseQueryResult<{[key:string]: string[]}, Error>
         queryKey: ['statsDates'],
         queryFn: async (): Promise<object> => {
             const url = `${CONSTANTS.API_URL}/stats/dates`
-            console.log(url)
             const response = await fetch(url)
             if (!response.ok) {
                 throw new Error('Dates retrieval error')

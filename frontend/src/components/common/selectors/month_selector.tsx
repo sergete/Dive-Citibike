@@ -11,7 +11,6 @@ import {Label} from "@radix-ui/react-label";
 
 export function MonthSelector({ handle, label, items}:{handle: any, label: string, items: string[]}) {
     const handleChange = (item: string): void => {
-        console.log("handleChange", item);
         handle(item);
     }
 

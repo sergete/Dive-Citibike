@@ -35,7 +35,7 @@ export function StatsCarousel({ statsObject }: { statsObject: IStats }) {
             pathname = str
         }
 
-        const inverseSlash = pathname.split("/").pop()
+        const inverseSlash: string | undefined = pathname.split("/").pop()
         if (inverseSlash != undefined && inverseSlash.length > 1) {
             pathname = inverseSlash.split('/').pop()
         }
