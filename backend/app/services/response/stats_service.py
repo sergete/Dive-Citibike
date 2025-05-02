@@ -5,7 +5,7 @@ class StatsService:
     def __init__(self):
         pass
 
-    async def get_data(self, year: int, month: int) -> dict:
+    async def get_data(self, year: str, month: str) -> dict:
         query = {"data_id": f"{year}{month}"}
         results = await MongoReaderService().find(query, projection={"_id": False,
                                                                      "stats": True})

@@ -23,3 +23,21 @@ class DateService:
                 results[year] = [month]
 
         return DateFormatterService.format(data=dates)
+
+    async def get_stats_dates(self) -> dict:
+        dates = await MongoReaderService().find({ "stats": { "$exists": "true", "$not": {"$size": 0} } },
+                                                projection={"_id": False, "data_id": True})
+        results = {}
+        for date in dates:
+            date = date["data_id"]
+            year = date[:4]
+            month = "0"
+            if len(date) == 6:
+                month = date[4:6]
+
+            if year in results:
+                results[year].append(month)
+            else:
+                results[year] = [month]
+
+        return DateFormatterService.format(data=dates)

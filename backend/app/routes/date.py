@@ -1,7 +1,6 @@
 from fastapi import APIRouter
 from fastapi.responses import JSONResponse
 
-from services.mongo.reader_service import MongoReaderService
 from services.response import DateService
 
 router = APIRouter(prefix="/dates",

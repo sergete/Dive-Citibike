@@ -20,4 +20,4 @@ app.add_middleware(
 
 app.include_router(prefix="/api/v1/trips/bikes" ,router=data_router)
 app.include_router(prefix="/api/v1/trips/bikes" ,router=date_router)
-app.include_router(prefix="/api/v1/trips/bikes" ,router=date_router)
+app.include_router(prefix="/api/v1/trips/bikes" ,router=stats_router)

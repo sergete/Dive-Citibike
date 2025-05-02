@@ -1,8 +1,6 @@
-import os.path
-import shutil
-import zipfile
+import os
+from multiprocessing import Pool
 
-import requests
 from pymongo.errors import ServerSelectionTimeoutError
 
 from services.mongo import MongoWriterService
@@ -11,18 +9,18 @@ from services.formatter.mongo import FormatterService
 
 from services.stats import StatsService
 
+NUM_THREADS = os.getenv('NUM_THREADS', 2)
 
 def format_data(data: dict[str, list]) -> list[dict]:
     return FormatterService.format(data)
 
-def save_data(docs: list[dict]) -> None:
-    mongo_service = MongoWriterService()
-    for doc in docs:
-        try:
-            mongo_service.insert_doc(filter_query={"data_id": doc["data_id"]}, doc=doc)
-        except ServerSelectionTimeoutError as ex:
-            print("Mongo server timed out for", doc["data_id"])
 
+def save_data(doc: dict) -> None:
+    mongo_service = MongoWriterService()
+    try:
+        mongo_service.insert_doc(filter_query={"$and":[{"data_id": doc["data_id"]}, {"link": doc["link"]}]}, doc=doc)
+    except ServerSelectionTimeoutError as ex:
+        print("Mongo server timed out for", doc["data_id"])
 
 def main():
     if __name__ == "__main__":
@@ -31,9 +29,13 @@ def main():
         if scraped_links:
             formatted_data = format_data(scraped_links)
             stats_service = StatsService(download_dir="./downloads")
-            formatted_stats_data = stats_service.run_stats(formatted_data)
-
-            save_data(formatted_stats_data)
+            with Pool(processes=NUM_THREADS) as pool:
+                result = pool.map_async(stats_service.run_stats, formatted_data)
+                # Wait to finish all tasks
+                # iterate results
+                for result in result.get():
+                    save_data(result)
+                    print(f'Got result: {result}', flush=True)
 
         print("Process Complete")
 
